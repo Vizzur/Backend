@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend",
+  "homepage": "https://github.com/Vizzur/Backend#readme",
+  "bugs": {
+    "url": "https://github.com/Vizzur/Backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vizzur/Backend.git"
+  },
+  "license": "ISC",
+  "author": "Felipe Varas",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+    
+  },
+  "dependencies": {
+    "dotenv": "^17.2.4",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.11"
+  }
+}

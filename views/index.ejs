@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= titulo %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><%= titulo %></h1>
+    </header>
+    
+    <main>
+      <section class="welcome">
+        <p><%= mensaje %></p>
+        <p class="timestamp">Generado en: <%= timestamp %></p>
+      </section>
+
+      <section class="links">
+        <h2>🗺️ Rutas Disponibles</h2>
+        
+        <div class="route-group">
+          <h3>📄 Rutas Dinámicas (EJS)</h3>
+          <ul>
+            <li>
+              <a href="/">GET /</a>
+              <span class="route-desc">Página principal con vista dinámica</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="route-group">
+          <h3>📊 Rutas API (JSON)</h3>
+          <ul>
+            <li>
+              <a href="/status">GET /status</a>
+              <span class="route-desc">Estado del servidor (uptime, memoria, versión)</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="route-group">
+          <h3>🧪 Rutas de Testing</h3>
+          <ul>
+            <li>
+              <a href="/test">GET /test</a>
+              <span class="route-desc">Información sobre endpoints de testing</span>
+            </li>
+            <li>
+              <a href="/test/log-accesos">GET /test/log-accesos</a>
+              <span class="route-desc">Simula 3 accesos y registra en log.txt</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="route-group">
+          <h3>📁 Recursos Estáticos</h3>
+          <ul>
+            <li>
+              <a href="/styles.css">GET /styles.css</a>
+              <span class="route-desc">Archivo CSS compartido</span>
+            </li>
+            <li>
+              <a href="/style-guide.html">GET /style-guide.html</a>
+              <span class="route-desc">Página HTML estática con documentación</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="route-group">
+          <h3>ℹ️ Información</h3>
+          <p>Todas las rutas se registran automáticamente en <code>logs/log.txt</code> con fecha, hora, IP y código de estado.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 Servidor Backend</p>
+    </footer>
+  </div>
+</body>
+</html>

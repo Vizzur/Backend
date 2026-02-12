@@ -1,0 +1,159 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  overflow: hidden;
+}
+
+header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+main {
+  padding: 30px;
+}
+
+.welcome {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.welcome p {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.timestamp {
+  color: #666;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.links h2 {
+  color: #667eea;
+  margin-bottom: 25px;
+  font-size: 1.3em;
+}
+
+.route-group {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.route-group:last-child {
+  border-bottom: none;
+}
+
+.route-group h3 {
+  color: #764ba2;
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.links li {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  border-left: 4px solid #667eea;
+}
+
+.links li:hover {
+  background: #667eea;
+  transform: translateX(5px);
+}
+
+.links li:hover a {
+  color: white;
+}
+
+.links li:hover .route-desc {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.links a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.95em;
+}
+
+.route-desc {
+  color: #666;
+  font-size: 0.85em;
+  display: block;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+.links li:hover .route-desc {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.route-group p {
+  color: #666;
+  font-size: 0.95em;
+  line-height: 1.6;
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.route-group code {
+  background: #e8e8e8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+footer {
+  background: #f5f5f5;
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  border-top: 1px solid #ddd;
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.95em;
+}

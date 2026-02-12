@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guía de Estilos - Servidor Backend</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .code-example {
+      background: #f4f4f4;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 20px 0;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 Guía de Estilos - Servidor Backend</h1>
+    </header>
+    
+    <main>
+      <section class="welcome">
+        <p>Esta es una página estática servida desde /public</p>
+      </section>
+
+      <section class="links">
+        <h2>Contenidos de esta Guía</h2>
+        
+        <h3 style="color: #667eea; margin-top: 20px;">1. Estructura de Rutas</h3>
+        <p>El servidor implementa las siguientes rutas:</p>
+        <ul>
+          <li><strong>GET /</strong> - Vista dinámica con EJS (HTML)</li>
+          <li><strong>GET /status</strong> - Información del servidor (JSON)</li>
+          <li><strong>GET /style-guide.html</strong> - Este archivo estático (HTML)</li>
+        </ul>
+
+        <h3 style="color: #667eea; margin-top: 20px;">2. Middleware Configurado</h3>
+        <div class="code-example">
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+        </div>
+
+        <h3 style="color: #667eea; margin-top: 20px;">3. Motor de Plantillas</h3>
+        <p>Se utiliza <strong>EJS</strong> (Embedded JavaScript) para renderizar vistas dinámicas. Las plantillas se encuentran en la carpeta <code>views/</code>.</p>
+
+        <h3 style="color: #667eea; margin-top: 20px;">4. Archivos Estáticos</h3>
+        <p>Los archivos estáticos (CSS, JS, imágenes) se sirven desde la carpeta <code>public/</code>.</p>
+
+        <h2 style="margin-top: 30px;">Navegación</h2>
+        <ul>
+          <li><a href="/">← Volver a Home</a></li>
+          <li><a href="/status">Ver Status del Servidor</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 Servidor Backend - Archivo estático desde /public</p>
+    </footer>
+  </div>
+</body>
+</html>
