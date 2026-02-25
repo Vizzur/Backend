@@ -3,6 +3,9 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
+// Importar módulo de conexión a base de datos
+const { connectDatabase } = require('./config/database');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -27,11 +30,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 const mainRoutes = require('./routes/main');
 const statusRoutes = require('./routes/status');
 const testRoutes = require('./routes/test');
+const usuariosRoutes = require('./routes/usuarios');
 
 // Usar rutas
 app.use('/', mainRoutes);
 app.use('/status', statusRoutes);
 app.use('/test', testRoutes);
+app.use('/usuarios', usuariosRoutes);
 
 // Manejo de rutas no encontradas
 app.use((req, res) => {
@@ -45,6 +50,14 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
+app.listen(PORT, async () => {
+  console.log(`[✓] Servidor ejecutándose en http://localhost:${PORT}`);
+  
+  // Conectar a la base de datos
+  try {
+    await connectDatabase();
+    console.log('[✓] Sistema listo para usar');
+  } catch (error) {
+    console.error('[✗] No se pudo conectar a la base de datos. El servidor continuará ejecutándose pero la funcionalidad de BD no estará disponible.');
+  }
 });
