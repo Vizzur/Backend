@@ -56,7 +56,59 @@
         </div>
 
         <div class="route-group">
-          <h3>📁 Recursos Estáticos</h3>
+          <h3>�️ Usuarios ORM (Sequelize)</h3>
+          <ul>
+            <li>
+              <a href="/orm/usuarios">GET /orm/usuarios</a>
+              <span class="route-desc">Listar todos los usuarios (con paginación)</span>
+            </li>
+            <li>
+              <a href="/orm/usuarios/1">GET /orm/usuarios/:id</a>
+              <span class="route-desc">Obtener usuario específico por ID</span>
+            </li>
+            <li>
+              <a href="/orm/comparison">GET /orm/comparison</a>
+              <span class="route-desc">Comparación SQL manual vs ORM Sequelize</span>
+            </li>
+          </ul>
+          <p class="route-note">POST, PUT, DELETE disponibles pero requieren JSON body</p>
+        </div>
+
+        <div class="route-group">
+          <h3>📦 Pedidos ORM (Relaciones Sequelize)</h3>
+          <ul>
+            <li>
+              <a href="/orm/usuario/1">GET /orm/usuario/:id</a>
+              <span class="route-desc">Usuario con sus pedidos anidados (se usa include())</span>
+            </li>
+            <li>
+              <a href="/orm/usuarios/1/pedidos">GET /orm/usuarios/:id/pedidos</a>
+              <span class="route-desc">Pedidos de un usuario específico</span>
+            </li>
+            <li>
+              <a href="/orm/pedidos">GET /orm/pedidos</a>
+              <span class="route-desc">Listar todos los pedidos con usuario (paginación)</span>
+            </li>
+            <li>
+              <a href="/orm/relaciones">GET /orm/relaciones</a>
+              <span class="route-desc">Comparar queries con/sin include() - que es mejor?</span>
+            </li>
+          </ul>
+          <p class="route-note">POST, PUT, DELETE disponibles pero requieren JSON body</p>
+        </div>
+
+        <div class="route-group">
+          <h3>📊 Dashboards Interactivos</h3>
+          <ul>
+            <li>
+              <a href="/usuarios-pedidos.html">GET /usuarios-pedidos.html</a>
+              <span class="route-desc">Dashboard HTML5: Usuarios con pedidos anidados (responsivo)</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="route-group">
+          <h3>�📁 Recursos Estáticos</h3>
           <ul>
             <li>
               <a href="/styles.css">GET /styles.css</a>
