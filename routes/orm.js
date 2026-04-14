@@ -103,7 +103,7 @@ router.get('/orm/usuarios', async (req, res) => {
 /**
  * GET /orm/usuarios/:id
  * 
- * Obtener un usuario específico por ID
+ * Obtener un usuario específico por ID CON SUS PEDIDOS ANIDADOS
  */
 router.get('/orm/usuarios/:id', async (req, res) => {
   try {
@@ -118,8 +118,14 @@ router.get('/orm/usuarios/:id', async (req, res) => {
       });
     }
     
-    // Buscar usuario con Sequelize
-    const usuario = await db.User.findByPk(userId, { raw: true });
+    // Buscar usuario con Sequelize E INCLUIR PEDIDOS ANIDADOS
+    const usuario = await db.User.findByPk(userId, {
+      include: {
+        model: db.Order,
+        as: 'pedidos',
+        attributes: ['id', 'numero_pedido', 'monto_total', 'estado', 'descripcion', 'notas', 'fecha_creacion', 'fecha_actualizacion']
+      }
+    });
     
     if (!usuario) {
       return res.status(404).json({
@@ -129,18 +135,34 @@ router.get('/orm/usuarios/:id', async (req, res) => {
       });
     }
     
+    // Mapear respuesta con pedidos incluidos
+    const usuarioMap = {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      activo: usuario.activo,
+      fecha_creacion: usuario.fecha_creacion,
+      fecha_actualizacion: usuario.fecha_actualizacion,
+      pedidos: usuario.pedidos ? usuario.pedidos.map(p => ({
+        id: p.id,
+        numero_pedido: p.numero_pedido,
+        monto_total: p.monto_total,
+        estado: p.estado,
+        descripcion: p.descripcion,
+        notas: p.notas,
+        fecha_pedido: p.fecha_creacion,
+        fecha_creacion: p.fecha_creacion,
+        fecha_actualizacion: p.fecha_actualizacion
+      })) : []
+    };
+    
     res.json({
       success: true,
       source: 'Sequelize ORM',
-      data: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        activo: usuario.activo,
-        fecha_creacion: usuario.fecha_creacion,
-        fecha_actualizacion: usuario.fecha_actualizacion
-      },
-      message: 'Usuario obtenido exitosamente [ORM]'
+      usuario: usuarioMap,
+      totalPedidos: usuarioMap.pedidos.length,
+      data: usuarioMap,
+      message: 'Usuario con pedidos obtenido exitosamente [ORM]'
     });
     
   } catch (error) {
@@ -148,6 +170,73 @@ router.get('/orm/usuarios/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al consultar usuario'
+    });
+  }
+});
+
+/**
+ * GET /orm/usuarios/:id/pedidos
+ * 
+ * Obtener solo los pedidos de un usuario específico
+ */
+router.get('/orm/usuarios/:id/pedidos', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validar ID
+    const userId = parseInt(id);
+    if (isNaN(userId) || userId < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ID debe ser un número positivo'
+      });
+    }
+    
+    // Verificar que el usuario existe
+    const usuario = await db.User.findByPk(userId);
+    
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuario no encontrado',
+        id: userId
+      });
+    }
+    
+    // Obtener pedidos del usuario
+    const pedidos = await db.Order.findAll({
+      where: { usuario_id: userId },
+      attributes: ['id', 'numero_pedido', 'monto_total', 'estado', 'descripcion', 'notas', 'fecha_creacion', 'fecha_actualizacion'],
+      order: [['fecha_creacion', 'DESC']]
+    });
+    
+    const pedidosMap = pedidos.map(p => ({
+      id: p.id,
+      numero_pedido: p.numero_pedido,
+      monto_total: p.monto_total,
+      estado: p.estado,
+      descripcion: p.descripcion,
+      notas: p.notas,
+      fecha_pedido: p.fecha_creacion,
+      fecha_creacion: p.fecha_creacion,
+      fecha_actualizacion: p.fecha_actualizacion
+    }));
+    
+    res.json({
+      success: true,
+      source: 'Sequelize ORM',
+      usuario_id: userId,
+      usuario_nombre: usuario.nombre,
+      pedidos: pedidosMap,
+      totalPedidos: pedidosMap.length,
+      message: `${pedidosMap.length} pedido(s) encontrado(s) [ORM]`
+    });
+    
+  } catch (error) {
+    console.error('[✗] Error en GET /orm/usuarios/:id/pedidos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al consultar pedidos del usuario'
     });
   }
 });
@@ -402,6 +491,292 @@ router.get('/orm/comparison', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al comparar SQL vs ORM'
+    });
+  }
+});
+
+/**
+ * GET /orm/productos
+ * 
+ * Obtener lista de productos con Sequelize
+ */
+router.get('/orm/productos', async (req, res) => {
+  try {
+    const { nombre, precio_min, precio_max, activo, page = 1, limit = 10 } = req.query;
+    
+    // Validar límite de paginación
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    const offset = (pageNum - 1) * limitNum;
+    
+    // Construir condiciones de búsqueda
+    const where = {};
+    
+    if (nombre) {
+      const { Op } = require('sequelize');
+      where.nombre = { [Op.iLike]: `%${nombre}%` };
+    }
+    
+    if (precio_min || precio_max) {
+      const { Op } = require('sequelize');
+      where.precio = {};
+      if (precio_min) where.precio[Op.gte] = parseFloat(precio_min);
+      if (precio_max) where.precio[Op.lte] = parseFloat(precio_max);
+    }
+    
+    if (activo !== undefined && activo !== '') {
+      where.activo = activo === 'true' || activo === true;
+    }
+    
+    // Ejecutar consulta usando pool directo para productos (no hay modelo Sequelize)
+    const { pool } = require('../config/database');
+    const query = `
+      SELECT id, nombre, descripcion, precio, stock, activo, fecha_creacion, fecha_actualizacion
+      FROM productos
+      WHERE 1=1
+      ${nombre ? "AND LOWER(nombre) LIKE LOWER($1)" : ''}
+      ${precio_min ? `AND precio >= ${precio_min}` : ''}
+      ${precio_max ? `AND precio <= ${precio_max}` : ''}
+      ${activo !== undefined && activo !== '' ? `AND activo = ${activo === 'true' || activo === true}` : ''}
+      ORDER BY fecha_creacion DESC
+      LIMIT $${nombre ? '2' : '1'} OFFSET $${nombre ? '3' : '2'}
+    `;
+    
+    const countQuery = `
+      SELECT COUNT(*) as count FROM productos
+      WHERE 1=1
+      ${nombre ? "AND LOWER(nombre) LIKE LOWER($1)" : ''}
+      ${precio_min ? `AND precio >= ${precio_min}` : ''}
+      ${precio_max ? `AND precio <= ${precio_max}` : ''}
+      ${activo !== undefined && activo !== '' ? `AND activo = ${activo === 'true' || activo === true}` : ''}
+    `;
+    
+    const params = [];
+    if (nombre) params.push(`%${nombre}%`);
+    params.push(limitNum);
+    params.push(offset);
+    
+    const countParams = [];
+    if (nombre) countParams.push(`%${nombre}%`);
+    
+    const countResult = await pool.query(countQuery, countParams);
+    const count = parseInt(countResult.rows[0].count);
+    
+    const result = await pool.query(query, params);
+    const productos = result.rows;
+    
+    const totalPages = Math.ceil(count / limitNum);
+    
+    res.json({
+      success: true,
+      source: 'SQL Directo (pool)',
+      data: productos,
+      pagination: {
+        currentPage: pageNum,
+        pageSize: limitNum,
+        totalRecords: count,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
+      },
+      message: `${count} producto(s) encontrado(s)`
+    });
+    
+  } catch (error) {
+    console.error('[✗] Error en GET /orm/productos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al consultar productos'
+    });
+  }
+});
+
+/**
+ * GET /orm/productos/:id
+ * 
+ * Obtener producto por ID
+ */
+router.get('/orm/productos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const productoId = parseInt(id);
+    
+    if (isNaN(productoId) || productoId < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ID debe ser un número positivo'
+      });
+    }
+    
+    const { pool } = require('../config/database');
+    const query = `
+      SELECT id, nombre, descripcion, precio, stock, activo, fecha_creacion, fecha_actualizacion
+      FROM productos
+      WHERE id = $1
+    `;
+    
+    const result = await pool.query(query, [productoId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Producto no encontrado'
+      });
+    }
+    
+    res.json({
+      success: true,
+      source: 'SQL Directo (pool)',
+      data: result.rows[0],
+      message: 'Producto obtenido exitosamente'
+    });
+    
+  } catch (error) {
+    console.error('[✗] Error en GET /orm/productos/:id:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al consultar producto'
+    });
+  }
+});
+
+/**
+ * GET /orm/pedidos
+ * 
+ * Obtener lista de pedidos con Sequelize ORM
+ */
+router.get('/orm/pedidos', async (req, res) => {
+  try {
+    const { estado, page = 1, limit = 10 } = req.query;
+    
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+    const offset = (pageNum - 1) * limitNum;
+    
+    const where = {};
+    
+    if (estado) {
+      where.estado = estado.toUpperCase();
+    }
+    
+    const { count, rows } = await db.Order.findAndCountAll({
+      where,
+      offset,
+      limit: limitNum,
+      include: {
+        model: db.User,
+        as: 'usuario',
+        attributes: ['id', 'nombre', 'email']
+      },
+      order: [['fecha_creacion', 'DESC']],
+      raw: false
+    });
+    
+    const totalPages = Math.ceil(count / limitNum);
+    
+    const pedidosMap = rows.map(p => ({
+      id: p.id,
+      numero_pedido: p.numero_pedido,
+      usuario: p.usuario ? {
+        id: p.usuario.id,
+        nombre: p.usuario.nombre,
+        email: p.usuario.email
+      } : null,
+      monto_total: p.monto_total,
+      estado: p.estado,
+      descripcion: p.descripcion,
+      notas: p.notas,
+      fecha_creacion: p.fecha_creacion,
+      fecha_actualizacion: p.fecha_actualizacion
+    }));
+    
+    res.json({
+      success: true,
+      source: 'Sequelize ORM',
+      data: pedidosMap,
+      pagination: {
+        currentPage: pageNum,
+        pageSize: limitNum,
+        totalRecords: count,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
+      },
+      filters: {
+        estado: estado || null
+      },
+      message: `${count} pedido(s) encontrado(s) [ORM]`
+    });
+    
+  } catch (error) {
+    console.error('[✗] Error en GET /orm/pedidos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al consultar pedidos'
+    });
+  }
+});
+
+/**
+ * GET /orm/pedidos/:id
+ * 
+ * Obtener pedido por ID con Sequelize ORM
+ */
+router.get('/orm/pedidos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pedidoId = parseInt(id);
+    
+    if (isNaN(pedidoId) || pedidoId < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'El ID debe ser un número positivo'
+      });
+    }
+    
+    const pedido = await db.Order.findByPk(pedidoId, {
+      include: {
+        model: db.User,
+        as: 'usuario',
+        attributes: ['id', 'nombre', 'email']
+      }
+    });
+    
+    if (!pedido) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pedido no encontrado'
+      });
+    }
+    
+    const pedidoData = {
+      id: pedido.id,
+      numero_pedido: pedido.numero_pedido,
+      usuario: pedido.usuario ? {
+        id: pedido.usuario.id,
+        nombre: pedido.usuario.nombre,
+        email: pedido.usuario.email
+      } : null,
+      monto_total: pedido.monto_total,
+      estado: pedido.estado,
+      descripcion: pedido.descripcion,
+      notas: pedido.notas,
+      fecha_creacion: pedido.fecha_creacion,
+      fecha_actualizacion: pedido.fecha_actualizacion
+    };
+    
+    res.json({
+      success: true,
+      source: 'Sequelize ORM',
+      data: pedidoData,
+      message: 'Pedido obtenido exitosamente [ORM]'
+    });
+    
+  } catch (error) {
+    console.error('[✗] Error en GET /orm/pedidos/:id:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al consultar pedido'
     });
   }
 });

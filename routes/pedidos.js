@@ -1,411 +1,202 @@
 /**
- * Rutas de Pedidos (Orders) con Sequelize
+ * Rutas de Pedidos
  * 
- * Demuestra el uso de relaciones:
- * - GET /orm/usuarios/:id/pedidos - Pedidos de un usuario
- * - GET /orm/pedidos - Listar todos los pedidos con usuario
- * - GET /orm/usuario/:id - Usuario con sus pedidos anidados
- * - POST /orm/pedidos - Crear pedido para usuario
+ * Implementa endpoints CRUD para pedidos usando el controlador.
  */
 
 const express = require('express');
+const PedidosController = require('../controllers/PedidosController');
+const { validatePedido, validateId, validatePagination, errorHandler } = require('../middlewares/validators');
+
 const router = express.Router();
-const { db } = require('../config/sequelize');
 
 /**
- * GET /orm/usuario/:id - Usuario con todos sus pedidos anidados
- * 
- * Usa: include() para traer relación 'pedidos'
- * Esto hace 1 query en lugar de N+1 queries
+ * @swagger
+ * /pedidos:
+ *   get:
+ *     summary: Obtener lista de pedidos
+ *     description: Recupera una lista paginada de todos los pedidos con información del usuario
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [PENDIENTE, CONFIRMADO, ENVIADO, ENTREGADO, CANCELADO]
+ *         description: Filtrar por estado del pedido
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           maximum: 100
+ *         description: Registros por página
+ *     responses:
+ *       200:
+ *         description: Lista de pedidos obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Pedido'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/Paginacion'
+ *       500:
+ *         description: Error en servidor
+ *   post:
+ *     summary: Crear nuevo pedido
+ *     description: Crea un nuevo pedido para un usuario existente
+ *     tags:
+ *       - Pedidos
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PedidoCrear'
+ *     responses:
+ *       201:
+ *         description: Pedido creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Pedido'
+ *       400:
+ *         description: Validación fallida
+ *       404:
+ *         description: Usuario no encontrado
+ *       409:
+ *         description: Número de pedido duplicado
+ *       500:
+ *         description: Error en servidor
+ * /pedidos/{id}:
+ *   get:
+ *     summary: Obtener pedido por ID
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del pedido
+ *     responses:
+ *       200:
+ *         description: Pedido obtenido exitosamente
+ *       404:
+ *         description: Pedido no encontrado
+ *       500:
+ *         description: Error en servidor
+ *   put:
+ *     summary: Actualizar pedido
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               estado:
+ *                 type: string
+ *                 enum: [PENDIENTE, CONFIRMADO, ENVIADO, ENTREGADO, CANCELADO]
+ *               descripcion:
+ *                 type: string
+ *               notas:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Pedido actualizado exitosamente
+ *       404:
+ *         description: Pedido no encontrado
+ *       500:
+ *         description: Error en servidor
+ *   delete:
+ *     summary: Eliminar pedido
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Pedido eliminado exitosamente
+ *       404:
+ *         description: Pedido no encontrado
+ *       500:
+ *         description: Error en servidor
+ * /usuarios/{userId}/pedidos:
+ *   get:
+ *     summary: Obtener pedidos de un usuario
+ *     tags:
+ *       - Pedidos
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [PENDIENTE, CONFIRMADO, ENVIADO, ENTREGADO, CANCELADO]
+ *         description: Filtrar por estado
+ *     responses:
+ *       200:
+ *         description: Pedidos del usuario obtenidos exitosamente
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error en servidor
  */
-router.get('/orm/usuario/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const userId = parseInt(id);
-    if (isNaN(userId) || userId < 1) {
-      return res.status(400).json({
-        success: false,
-        error: 'ID debe ser número positivo'
-      });
-    }
-    
-    // Traer usuario con sus pedidos en UNA sola consulta
-    const usuario = await db.User.findByPk(userId, {
-      include: [
-        {
-          association: 'pedidos'  // Alias definido en relación
-        }
-      ]
-    });
-    
-    if (!usuario) {
-      return res.status(404).json({
-        success: false,
-        error: 'Usuario no encontrado'
-      });
-    }
-    
-    res.json({
-      success: true,
-      source: 'Sequelize ORM con Include',
-      usuario: usuario.toJSON(),
-      totalPedidos: usuario.pedidos ? usuario.pedidos.length : 0,
-      message: `Usuario con ${usuario.pedidos ? usuario.pedidos.length : 0} pedido(s)`
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error GET /orm/usuario/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener usuario con pedidos'
-    });
-  }
-});
 
-/**
- * GET /orm/usuarios/:id/pedidos - Pedidos de un usuario específico
- * 
- * Alternativa a include(), usando where directamente
- */
-router.get('/orm/usuarios/:id/pedidos', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.query;  // Filtrar por estado (opcional)
-    
-    const userId = parseInt(id);
-    if (isNaN(userId) || userId < 1) {
-      return res.status(400).json({
-        success: false,
-        error: 'ID debe ser número positivo'
-      });
-    }
-    
-    // Filtros opcionales
-    const where = { usuario_id: userId };
-    if (estado) {
-      where.estado = estado.toUpperCase();
-    }
-    
-    // Traer pedidos del usuario
-    const pedidos = await db.Order.findAll({
-      where,
-      include: [
-        {
-          association: 'usuario',
-          attributes: ['id', 'nombre', 'email']  // Solo ciertos campos
-        }
-      ],
-      order: [['fecha_pedido', 'DESC']]
-    });
-    
-    // Verificar que el usuario existe
-    const usuario = await db.User.findByPk(userId);
-    if (!usuario) {
-      return res.status(404).json({
-        success: false,
-        error: 'Usuario no encontrado'
-      });
-    }
-    
-    res.json({
-      success: true,
-      source: 'Sequelize ORM con Include',
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email
-      },
-      pedidos,
-      totalPedidos: pedidos.length,
-      filtros: {
-        estado: estado || null
-      }
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error GET /orm/usuarios/:id/pedidos:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener pedidos de usuario'
-    });
-  }
-});
+// GET /pedidos - Listar todos los pedidos
+router.get('/', validatePagination, PedidosController.listar);
 
-/**
- * GET /orm/pedidos - Listar todos los pedidos con información de usuario
- * 
- * Usa include() para no hacer N+1 queries
- */
-router.get('/orm/pedidos', async (req, res) => {
-  try {
-    const { estado, page = 1, limit = 10 } = req.query;
-    
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
-    const offset = (pageNum - 1) * limitNum;
-    
-    // Filtros
-    const where = {};
-    if (estado) {
-      where.estado = estado.toUpperCase();
-    }
-    
-    // Consulta con relación (evita N+1)
-    const { count, rows } = await db.Order.findAndCountAll({
-      where,
-      include: [
-        {
-          association: 'usuario',
-          attributes: ['id', 'nombre', 'email']
-        }
-      ],
-      offset,
-      limit: limitNum,
-      order: [['fecha_pedido', 'DESC']]
-    });
-    
-    const totalPages = Math.ceil(count / limitNum);
-    
-    res.json({
-      success: true,
-      source: 'Sequelize ORM con Include',
-      data: rows,
-      pagination: {
-        currentPage: pageNum,
-        pageSize: limitNum,
-        totalRecords: count,
-        totalPages,
-        hasNextPage: pageNum < totalPages
-      },
-      filtros: {
-        estado: estado || null
-      }
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error GET /orm/pedidos:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al obtener pedidos'
-    });
-  }
-});
+// GET /pedidos/:id - Obtener pedido por ID
+router.get('/:id', validateId, PedidosController.obtenerPorId);
 
-/**
- * POST /orm/pedidos - Crear nuevo pedido para un usuario
- * 
- * Validaciones automáticas del modelo
- */
-router.post('/orm/pedidos', async (req, res) => {
-  try {
-    const { usuario_id, numero_pedido, descripcion, monto_total, estado } = req.body;
-    
-    // Validar usuario existe
-    if (!usuario_id) {
-      return res.status(400).json({
-        success: false,
-        error: 'usuario_id requerido'
-      });
-    }
-    
-    const usuario = await db.User.findByPk(usuario_id);
-    if (!usuario) {
-      return res.status(404).json({
-        success: false,
-        error: 'Usuario no encontrado'
-      });
-    }
-    
-    // Crear pedido
-    const pedido = await db.Order.create({
-      usuario_id,
-      numero_pedido,
-      descripcion,
-      monto_total,
-      estado: estado || 'PENDIENTE'
-    });
-    
-    // Traer el pedido con usuario para respuesta
-    const pedidoConUsuario = await db.Order.findByPk(pedido.id, {
-      include: [
-        {
-          association: 'usuario',
-          attributes: ['id', 'nombre', 'email']
-        }
-      ]
-    });
-    
-    res.status(201).json({
-      success: true,
-      statusCode: 201,
-      source: 'Sequelize ORM',
-      data: pedidoConUsuario.toJSON(),
-      message: 'Pedido creado exitosamente'
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error POST /orm/pedidos:', error);
-    
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(409).json({
-        success: false,
-        error: 'Número de pedido ya existe'
-      });
-    }
-    
-    if (error.name === 'SequelizeValidationError') {
-      return res.status(400).json({
-        success: false,
-        error: 'Datos inválidos',
-        details: error.errors.map(e => ({
-          field: e.path,
-          message: e.message
-        }))
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      error: 'Error al crear pedido'
-    });
-  }
-});
+// GET /pedidos/usuario/:userId - Obtener pedidos de un usuario específico
+router.get('/usuario/:userId', validateId, PedidosController.obtenerPorUsuario);
 
-/**
- * GET /orm/relaciones - Endpoint de demostración
- * 
- * Muestra:
- * 1. Usuario sin include (solo usuario)
- * 2. Usuario con include (usuario + pedidos)
- * 3. Diferencia en los datos
- */
-router.get('/orm/relaciones', async (req, res) => {
-  try {
-    // Obtener primer usuario (idealmente con al menos 1 pedido)
-    const usuarioSinInclude = await db.User.findOne({
-      raw: true
-    });
-    
-    if (!usuarioSinInclude) {
-      return res.status(404).json({
-        success: false,
-        error: 'No hay usuarios en la base de datos'
-      });
-    }
-    
-    // Mismo usuario pero CON pedidos
-    const usuarioConInclude = await db.User.findByPk(usuarioSinInclude.id, {
-      include: [
-        {
-          association: 'pedidos'
-        }
-      ]
-    });
-    
-    res.json({
-      success: true,
-      comparison: {
-        sinInclude: {
-          metodo: 'User.findOne({ raw: true })',
-          data: usuarioSinInclude,
-          tienePedidos: false,
-          descripcion: 'Solo datos del usuario, sin relaciones'
-        },
-        conInclude: {
-          metodo: 'User.findByPk(id, { include: [{ association: "pedidos" }] })',
-          data: usuarioConInclude.toJSON(),
-          tienePedidos: usuarioConInclude.pedidos.length > 0,
-          totalPedidos: usuarioConInclude.pedidos.length,
-          descripcion: 'Usuario + todos sus pedidos en una sola consulta'
-        }
-      },
-      nota: 'Usa include() para traer relaciones eficientemente'
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error GET /orm/relaciones:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al demostrar relaciones'
-    });
-  }
-});
+// POST /pedidos - Crear nuevo pedido
+router.post('/', validatePedido, PedidosController.crear);
 
-/**
- * PUT /orm/pedidos/:id - Actualizar pedido
- */
-router.put('/orm/pedidos/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado, descripcion, notas } = req.body;
-    
-    const pedido = await db.Order.findByPk(id);
-    if (!pedido) {
-      return res.status(404).json({
-        success: false,
-        error: 'Pedido no encontrado'
-      });
-    }
-    
-    // Actualizar campos permitidos
-    if (estado) pedido.estado = estado;
-    if (descripcion !== undefined) pedido.descripcion = descripcion;
-    if (notas !== undefined) pedido.notas = notas;
-    
-    await pedido.save();
-    
-    // Traer con usuario
-    const pedidoActualizado = await db.Order.findByPk(id, {
-      include: [{ association: 'usuario', attributes: ['id', 'nombre', 'email'] }]
-    });
-    
-    res.json({
-      success: true,
-      data: pedidoActualizado.toJSON(),
-      message: 'Pedido actualizado exitosamente'
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error PUT /orm/pedidos/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al actualizar pedido'
-    });
-  }
-});
+// PUT /pedidos/:id - Actualizar pedido
+router.put('/:id', validateId, PedidosController.actualizar);
 
-/**
- * DELETE /orm/pedidos/:id - Eliminar pedido
- */
-router.delete('/orm/pedidos/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const pedido = await db.Order.findByPk(id);
-    if (!pedido) {
-      return res.status(404).json({
-        success: false,
-        error: 'Pedido no encontrado'
-      });
-    }
-    
-    const deletedData = pedido.toJSON();
-    await pedido.destroy();
-    
-    res.json({
-      success: true,
-      message: 'Pedido eliminado exitosamente',
-      deletedPedido: deletedData
-    });
-    
-  } catch (error) {
-    console.error('[✗] Error DELETE /orm/pedidos/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error al eliminar pedido'
-    });
-  }
-});
+// DELETE /pedidos/:id - Eliminar pedido
+router.delete('/:id', validateId, PedidosController.eliminar);
 
 module.exports = router;

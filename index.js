@@ -7,6 +7,10 @@ const fs = require('fs');
 const { connectDatabase } = require('./config/database');
 const { syncDatabase } = require('./config/sequelize');
 
+// Importar Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./config/swagger');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -27,22 +31,39 @@ app.use(loggerMiddleware);
 // Middleware para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Servir documentación Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'API Documentation - Backend REST',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayOperationId: false,
+  }
+}));
+
 // Importar rutas
 const mainRoutes = require('./routes/main');
 const statusRoutes = require('./routes/status');
 const testRoutes = require('./routes/test');
 const usuariosRoutes = require('./routes/usuarios');
-const ormRoutes = require('./routes/orm');
+const productosRoutes = require('./routes/productos');
 const pedidosRoutes = require('./routes/pedidos');
+const ormRoutes = require('./routes/orm');
+
+// Importar middleware de error
+const { errorHandler } = require('./middlewares/validators');
 
 // Usar rutas
 app.use('/', mainRoutes);
 app.use('/status', statusRoutes);
 app.use('/test', testRoutes);
 app.use('/usuarios', usuariosRoutes);
-app.use('/', ormRoutes);  // Las rutas ORM están en /orm/...
-app.use('/', pedidosRoutes);  // Las rutas de pedidos están en /orm/pedidos
+app.use('/productos', productosRoutes);
+app.use('/pedidos', pedidosRoutes);
+app.use('/', ormRoutes);  // Las rutas ORM están en /orm/... (comparación SQL vs ORM)
 
+// Middleware de error centralizado
+app.use(errorHandler);
 
 // Manejo de rutas no encontradas
 app.use((req, res) => {

@@ -1,0 +1,371 @@
+{
+  "info": {
+    "_postman_id": "api-backend-rest",
+    "name": "Backend REST API",
+    "description": "Colección de endpoints RESTful para gestión de usuarios, productos y pedidos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "📋 Health Check",
+      "item": [
+        {
+          "name": "API Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["status"]
+            },
+            "description": "Verifica el estado de la API"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios",
+      "item": [
+        {
+          "name": "Listar todos los usuarios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/usuarios?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["usuarios"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "nombre", "value": "", "disabled": true},
+                {"key": "email", "value": "", "disabled": true},
+                {"key": "activo", "value": "true", "disabled": true}
+              ]
+            },
+            "description": "Obtiene lista paginada de usuarios con filtros opcionales"
+          }
+        },
+        {
+          "name": "Obtener usuario por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/usuarios/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["usuarios", "1"]
+            },
+            "description": "Obtiene detalles de un usuario específico"
+          }
+        },
+        {
+          "name": "Crear nuevo usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Pérez\",\n  \"email\": \"juan@example.com\",\n  \"password_hash\": \"hashed_password_here\",\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/usuarios",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["usuarios"]
+            },
+            "description": "Crea un nuevo usuario en la base de datos"
+          }
+        },
+        {
+          "name": "Actualizar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Pérez García\",\n  \"email\": \"juan.nuevo@example.com\",\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/usuarios/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["usuarios", "1"]
+            },
+            "description": "Actualiza un usuario existente"
+          }
+        },
+        {
+          "name": "Eliminar usuario",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:3000/usuarios/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["usuarios", "1"]
+            },
+            "description": "Elimina un usuario de la base de datos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Productos",
+      "item": [
+        {
+          "name": "Listar todos los productos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/productos?page=1&limit=10&ordenar=fecha",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["productos"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "ordenar", "value": "fecha"},
+                {"key": "nombre", "value": "", "disabled": true},
+                {"key": "precio_min", "value": "", "disabled": true},
+                {"key": "precio_max", "value": "", "disabled": true},
+                {"key": "activo", "value": "true", "disabled": true}
+              ]
+            },
+            "description": "Obtiene lista paginada de productos"
+          }
+        },
+        {
+          "name": "Obtener producto por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/productos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["productos", "1"]
+            },
+            "description": "Obtiene detalles de un producto específico"
+          }
+        },
+        {
+          "name": "Crear nuevo producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laptop Dell XPS 15\",\n  \"descripcion\": \"Laptop de 15 pulgadas con procesador Intel i7 y 16GB RAM\",\n  \"precio\": 1299.99,\n  \"stock\": 50,\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/productos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["productos"]
+            },
+            "description": "Crea un nuevo producto en el inventario"
+          }
+        },
+        {
+          "name": "Actualizar producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laptop Dell XPS 15 Plus\",\n  \"precio\": 1399.99,\n  \"stock\": 45\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/productos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["productos", "1"]
+            },
+            "description": "Actualiza un producto existente"
+          }
+        },
+        {
+          "name": "Eliminar producto",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:3000/productos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["productos", "1"]
+            },
+            "description": "Elimina un producto (marcado como inactivo)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Pedidos",
+      "item": [
+        {
+          "name": "Listar todos los pedidos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/orm/pedidos?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "pedidos"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"},
+                {"key": "estado", "value": "", "disabled": true}
+              ]
+            },
+            "description": "Obtiene lista paginada de pedidos con información del usuario"
+          }
+        },
+        {
+          "name": "Obtener pedidos de un usuario",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/orm/usuarios/1/pedidos?estado=PENDIENTE",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "usuarios", "1", "pedidos"],
+              "query": [
+                {"key": "estado", "value": "PENDIENTE", "disabled": true}
+              ]
+            },
+            "description": "Obtiene todos los pedidos de un usuario específico"
+          }
+        },
+        {
+          "name": "Obtener usuario con sus pedidos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/orm/usuario/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "usuario", "1"]
+            },
+            "description": "Obtiene un usuario con todos sus pedidos anidados en una consulta"
+          }
+        },
+        {
+          "name": "Crear nuevo pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario_id\": 1,\n  \"numero_pedido\": \"PED-2024-001\",\n  \"descripcion\": \"Pedido de electrónica\",\n  \"monto_total\": 150.50,\n  \"estado\": \"PENDIENTE\",\n  \"fecha_entrega_estimada\": \"2024-01-20\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/orm/pedidos",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "pedidos"]
+            },
+            "description": "Crea un nuevo pedido para un usuario"
+          }
+        },
+        {
+          "name": "Actualizar pedido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CONFIRMADO\",\n  \"descripcion\": \"Pedido confirmado y listo para envío\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/orm/pedidos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "pedidos", "1"]
+            },
+            "description": "Actualiza un pedido existente"
+          }
+        },
+        {
+          "name": "Eliminar pedido",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:3000/orm/pedidos/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "pedidos", "1"]
+            },
+            "description": "Elimina un pedido de la base de datos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔗 Relaciones ORM",
+      "item": [
+        {
+          "name": "Demostración de relaciones",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/orm/relaciones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "relaciones"]
+            },
+            "description": "Demuestra la diferencia entre consultas con y sin include()"
+          }
+        },
+        {
+          "name": "Listar usuarios con ORM",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/orm/usuarios?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["orm", "usuarios"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "10"}
+              ]
+            },
+            "description": "Obtiene usuarios usando Sequelize ORM"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,23 +1,23 @@
 /**
- * Rutas de Usuarios
+ * Rutas de Productos
  * 
- * Implementa endpoints CRUD para usuarios usando el controlador.
+ * Implementa endpoints CRUD para productos usando el controlador.
  */
 
 const express = require('express');
-const UsuariosController = require('../controllers/UsuariosController');
-const { validateUsuario, validateId, validatePagination, errorHandler } = require('../middlewares/validators');
+const ProductosController = require('../controllers/ProductosController');
+const { validateProducto, validateId, validatePagination, errorHandler } = require('../middlewares/validators');
 
 const router = express.Router();
 
 /**
  * @swagger
- * /usuarios:
+ * /productos:
  *   get:
- *     summary: Obtener lista de usuarios
- *     description: Recupera una lista paginada de usuarios con opciones de filtrado
+ *     summary: Obtener lista de productos
+ *     description: Recupera una lista paginada de productos con opciones de filtrado y búsqueda
  *     tags:
- *       - Usuarios
+ *       - Productos
  *     parameters:
  *       - in: query
  *         name: nombre
@@ -25,15 +25,20 @@ const router = express.Router();
  *           type: string
  *         description: Filtrar por nombre (búsqueda parcial)
  *       - in: query
- *         name: email
+ *         name: precio_min
  *         schema:
- *           type: string
- *         description: Filtrar por email (búsqueda parcial)
+ *           type: number
+ *         description: Precio mínimo
+ *       - in: query
+ *         name: precio_max
+ *         schema:
+ *           type: number
+ *         description: Precio máximo
  *       - in: query
  *         name: activo
  *         schema:
  *           type: boolean
- *         description: Filtrar por estado activo
+ *         description: Solo productos activos
  *       - in: query
  *         name: page
  *         schema:
@@ -47,9 +52,16 @@ const router = express.Router();
  *           default: 10
  *           maximum: 100
  *         description: Registros por página
+ *       - in: query
+ *         name: ordenar
+ *         schema:
+ *           type: string
+ *           enum: [nombre, precio, stock, fecha]
+ *           default: fecha
+ *         description: Campo para ordenar resultados
  *     responses:
  *       200:
- *         description: Lista de usuarios obtenida exitosamente
+ *         description: Lista de productos obtenida exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -60,29 +72,25 @@ const router = express.Router();
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Usuario'
+ *                     $ref: '#/components/schemas/Producto'
  *                 pagination:
  *                   $ref: '#/components/schemas/Paginacion'
  *       500:
  *         description: Error en servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *   post:
- *     summary: Crear nuevo usuario
- *     description: Crea un nuevo usuario en la base de datos
+ *     summary: Crear nuevo producto
+ *     description: Crea un nuevo producto en el inventario
  *     tags:
- *       - Usuarios
+ *       - Productos
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UsuarioCrear'
+ *             $ref: '#/components/schemas/ProductoCrear'
  *     responses:
  *       201:
- *         description: Usuario creado exitosamente
+ *         description: Producto creado exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -91,29 +99,27 @@ const router = express.Router();
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/Usuario'
+ *                   $ref: '#/components/schemas/Producto'
  *       400:
  *         description: Validación fallida
- *       409:
- *         description: Email ya registrado
  *       500:
  *         description: Error en servidor
- * /usuarios/{id}:
+ * /productos/{id}:
  *   get:
- *     summary: Obtener usuario por ID
- *     description: Recupera los detalles de un usuario específico
+ *     summary: Obtener producto por ID
+ *     description: Recupera los detalles de un producto específico
  *     tags:
- *       - Usuarios
+ *       - Productos
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del usuario
+ *         description: ID del producto
  *     responses:
  *       200:
- *         description: Usuario obtenido exitosamente
+ *         description: Producto obtenido exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -122,25 +128,25 @@ const router = express.Router();
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/Usuario'
+ *                   $ref: '#/components/schemas/Producto'
  *       400:
  *         description: ID inválido
  *       404:
- *         description: Usuario no encontrado
+ *         description: Producto no encontrado
  *       500:
  *         description: Error en servidor
  *   put:
- *     summary: Actualizar usuario
- *     description: Actualiza los datos de un usuario existente
+ *     summary: Actualizar producto
+ *     description: Actualiza los datos de un producto existente
  *     tags:
- *       - Usuarios
+ *       - Productos
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del usuario
+ *         description: ID del producto
  *     requestBody:
  *       required: true
  *       content:
@@ -150,17 +156,23 @@ const router = express.Router();
  *             properties:
  *               nombre:
  *                 type: string
- *                 example: Juan Nuevo
- *               email:
+ *                 example: Laptop Dell XPS 15
+ *               descripcion:
  *                 type: string
- *                 format: email
- *                 example: juannuevo@example.com
+ *                 example: Laptop mejorada de 15 pulgadas
+ *               precio:
+ *                 type: number
+ *                 format: decimal
+ *                 example: 1399.99
+ *               stock:
+ *                 type: integer
+ *                 example: 40
  *               activo:
  *                 type: boolean
  *                 example: true
  *     responses:
  *       200:
- *         description: Usuario actualizado exitosamente
+ *         description: Producto actualizado exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -169,30 +181,28 @@ const router = express.Router();
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/Usuario'
+ *                   $ref: '#/components/schemas/Producto'
  *       400:
  *         description: Validación fallida
  *       404:
- *         description: Usuario no encontrado
- *       409:
- *         description: Email duplicado
+ *         description: Producto no encontrado
  *       500:
  *         description: Error en servidor
  *   delete:
- *     summary: Eliminar usuario
- *     description: Elimina un usuario de la base de datos
+ *     summary: Eliminar producto
+ *     description: Elimina un producto del inventario (eliminación lógica - marca como inactivo)
  *     tags:
- *       - Usuarios
+ *       - Productos
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID del usuario
+ *         description: ID del producto
  *     responses:
  *       200:
- *         description: Usuario eliminado exitosamente
+ *         description: Producto eliminado exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -205,24 +215,24 @@ const router = express.Router();
  *       400:
  *         description: ID inválido
  *       404:
- *         description: Usuario no encontrado
+ *         description: Producto no encontrado
  *       500:
  *         description: Error en servidor
  */
 
-// GET /usuarios - Listar usuarios
-router.get('/', validatePagination, UsuariosController.listar);
+// GET /productos - Listar productos
+router.get('/', validatePagination, ProductosController.listar);
 
-// GET /usuarios/:id - Obtener usuario
-router.get('/:id', validateId, UsuariosController.obtenerPorId);
+// GET /productos/:id - Obtener producto
+router.get('/:id', validateId, ProductosController.obtenerPorId);
 
-// POST /usuarios - Crear usuario
-router.post('/', validateUsuario, UsuariosController.crear);
+// POST /productos - Crear producto
+router.post('/', validateProducto, ProductosController.crear);
 
-// PUT /usuarios/:id - Actualizar usuario
-router.put('/:id', validateId, UsuariosController.actualizar);
+// PUT /productos/:id - Actualizar producto
+router.put('/:id', validateId, ProductosController.actualizar);
 
-// DELETE /usuarios/:id - Eliminar usuario
-router.delete('/:id', validateId, UsuariosController.eliminar);
+// DELETE /productos/:id - Eliminar producto
+router.delete('/:id', validateId, ProductosController.eliminar);
 
 module.exports = router;

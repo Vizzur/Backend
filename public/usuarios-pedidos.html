@@ -294,12 +294,10 @@
 
         <div class="endpoint-info">
             <h4>📍 Endpoints utilizados:</h4>
-            <code>GET /orm/usuario/:id</code> - Obtiene usuario + sus pedidos anidados
-            <br>
-            <code>GET /orm/usuarios/:id/pedidos</code> - Lista pedidos de un usuario
-            <br>
-            <code>GET /orm/relaciones</code> - Compara con/sin include()
-        </div>
+            <code>GET /orm/usuarios</code> - Lista todos los usuarios<br>
+            <code>GET /orm/usuarios/:id</code> - Obtiene usuario + sus pedidos anidados con Sequelize<br>
+            <code>GET /orm/usuarios/:id/pedidos</code> - Lista pedidos de un usuario específico<br>
+            <code>GET /orm/relaciones</code> - Compara con/sin include() de Sequelize</div>
 
         <div id="stats" class="stats"></div>
 
@@ -335,7 +333,7 @@
             mostrarCargando();
             
             try {
-                const response = await fetch(`/orm/usuario/${usuarioId}`);
+                const response = await fetch(`/orm/usuarios/${usuarioId}`);
                 const data = await response.json();
 
                 if (!data.success) {
@@ -343,14 +341,19 @@
                     return;
                 }
 
+                // data.usuario contiene el usuario con pedidos anidados
+                const usuario = data.usuario || data.data;
+                
                 const container = document.getElementById('usuariosContainer');
-                container.innerHTML = renderizarUsuario(data.usuario);
+                container.innerHTML = renderizarUsuario(usuario);
                 
                 actualizarStats({
                     totalUsuarios: 1,
-                    totalPedidos: data.totalPedidos,
-                    usuariosConPedidos: data.totalPedidos > 0 ? 1 : 0
+                    totalPedidos: usuario.pedidos ? usuario.pedidos.length : 0,
+                    usuariosConPedidos: (usuario.pedidos && usuario.pedidos.length > 0) ? 1 : 0
                 });
+
+                mostrarExito(`Usuario cargado: ${usuario.nombre}`);
 
             } catch (error) {
                 mostrarError('Error al cargar usuario: ' + error.message);
@@ -377,16 +380,21 @@
                 let usuariosConPedidos = 0;
 
                 for (const usuario of data.data) {
-                    // Obtener pedidos de cada usuario
-                    const pedidosResponse = await fetch(`/orm/usuarios/${usuario.id}/pedidos`);
-                    const pedidosData = await pedidosResponse.json();
-                    
-                    if (pedidosData.success) {
-                        usuario.pedidos = pedidosData.pedidos || [];
-                        totalPedidos += usuario.pedidos.length;
-                        if (usuario.pedidos.length > 0) {
-                            usuariosConPedidos++;
+                    try {
+                        // Obtener pedidos de cada usuario usando el nuevo endpoint
+                        const pedidosResponse = await fetch(`/orm/usuarios/${usuario.id}/pedidos`);
+                        const pedidosData = await pedidosResponse.json();
+                        
+                        if (pedidosData.success) {
+                            usuario.pedidos = pedidosData.pedidos || [];
+                            totalPedidos += usuario.pedidos.length;
+                            if (usuario.pedidos.length > 0) {
+                                usuariosConPedidos++;
+                            }
                         }
+                    } catch (error) {
+                        console.error(`Error al obtener pedidos del usuario ${usuario.id}:`, error);
+                        usuario.pedidos = [];
                     }
                     
                     html += renderizarUsuario(usuario);
@@ -416,17 +424,22 @@
             
             let pedidosHtml = '';
             if (pedidos.length > 0) {
-                pedidosHtml = pedidos.map(pedido => `
+                pedidosHtml = pedidos.map(pedido => {
+                    // Obtener fecha - puede ser fecha_pedido, fecha_creacion o cualquier campo con timestamp
+                    const fecha = pedido.fecha_pedido || pedido.fecha_creacion;
+                    const fechaFormato = fecha ? new Date(fecha).toLocaleDateString() : 'S/D';
+                    
+                    return `
                     <div class="pedido-item">
-                        <div class="pedido-numero">${pedido.numero_pedido}</div>
+                        <div class="pedido-numero">#${pedido.numero_pedido}</div>
                         <div class="pedido-detalles">
-                            <div><strong>Monto:</strong> $${parseFloat(pedido.monto_total).toFixed(2)}</div>
-                            <div><strong>Fecha:</strong> ${new Date(pedido.fecha_pedido).toLocaleDateString()}</div>
+                            <div><strong>Monto:</strong> $${parseFloat(pedido.monto_total || 0).toFixed(2)}</div>
+                            <div><strong>Fecha:</strong> ${fechaFormato}</div>
                         </div>
                         ${pedido.descripcion ? `<div style="margin-top:5px;"><strong>Desc:</strong> ${pedido.descripcion.substring(0, 50)}...</div>` : ''}
                         <span class="pedido-estado estado-${pedido.estado.toLowerCase()}">${pedido.estado}</span>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
                 pedidosHtml = '<div class="sin-pedidos">Sin pedidos</div>';
             }
