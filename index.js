@@ -31,6 +31,9 @@ app.use(loggerMiddleware);
 // Middleware para servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Servir uploads como archivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Servir documentación Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
   customCss: '.swagger-ui .topbar { display: none }',
@@ -45,22 +48,29 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
 const mainRoutes = require('./routes/main');
 const statusRoutes = require('./routes/status');
 const testRoutes = require('./routes/test');
+const authRoutes = require('./routes/auth');
 const usuariosRoutes = require('./routes/usuarios');
 const productosRoutes = require('./routes/productos');
 const pedidosRoutes = require('./routes/pedidos');
+const uploadRoutes = require('./routes/upload');
 const ormRoutes = require('./routes/orm');
 
 // Importar middleware de error
-const { errorHandler } = require('./middlewares/validators');
+const { errorHandler, multerErrorHandler } = require('./middlewares/validators');
 
 // Usar rutas
 app.use('/', mainRoutes);
 app.use('/status', statusRoutes);
 app.use('/test', testRoutes);
+app.use('/auth', authRoutes);  // Rutas de autenticación
 app.use('/usuarios', usuariosRoutes);
 app.use('/productos', productosRoutes);
 app.use('/pedidos', pedidosRoutes);
-app.use('/', ormRoutes);  // Las rutas ORM están en /orm/... (comparación SQL vs ORM)
+app.use('/upload', uploadRoutes);  // Rutas de upload
+app.use('/', ormRoutes);  // Las rutas ORM están en /orm/...
+
+// Middleware de error para multer
+app.use(multerErrorHandler);
 
 // Middleware de error centralizado
 app.use(errorHandler);

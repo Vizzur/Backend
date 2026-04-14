@@ -280,11 +280,65 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
+/**
+ * Middleware para manejar errores de Multer
+ */
+const multerErrorHandler = (err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      error: 'Archivo demasiado grande',
+      message: 'El tamaño máximo permitido es 10 MB',
+      maxSize: '10 MB',
+      receivedSize: err.limit
+    });
+  }
+
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(413).json({
+      success: false,
+      error: 'Demasiados archivos',
+      message: 'El máximo permitido es 5 archivos',
+      maxFiles: 5
+    });
+  }
+
+  if (err.code === 'LIMIT_PART_COUNT') {
+    return res.status(400).json({
+      success: false,
+      error: 'Demasiados campos',
+      message: 'El número de campos excedió el límite'
+    });
+  }
+
+  if (err.message === 'Tipo de archivo no permitido') {
+    return res.status(400).json({
+      success: false,
+      error: 'Tipo de archivo no permitido',
+      message: err.message,
+      receivedType: err.message
+    });
+  }
+
+  // Error de multer genérico
+  if (err.name === 'MulterError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Error al subir archivo',
+      message: err.message
+    });
+  }
+
+  // Dejar pasar otros errores al siguiente middleware
+  next(err);
+};
+
 module.exports = {
   validateUsuario,
   validateProducto,
   validatePedido,
   validateId,
   validatePagination,
-  errorHandler
+  errorHandler,
+  multerErrorHandler
 };

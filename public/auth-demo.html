@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Demo Autenticación JWT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .response {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .response.info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.authenticated {
+            background: #28a745;
+            color: white;
+        }
+
+        .status.unauthenticated {
+            background: #dc3545;
+            color: white;
+        }
+
+        .token-display {
+            background: #f1f3f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            text-align: center;
+            color: #666;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #0066cc;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="emoji">🔐</span> Demo Autenticación JWT</h1>
+        <p class="subtitle">Sistema de ejemplo para probar autenticación con tokens</p>
+
+        <div class="info-box">
+            <strong>ℹ️ Credenciales de prueba:</strong><br>
+            Email: <code>juan@example.com</code><br>
+            Password: <code>password123</code>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 1: LOGIN -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">📝</span> 1. Login</h2>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="juan@example.com" value="juan@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" placeholder="password123" value="password123">
+            </div>
+            <button onclick="hacerLogin()">🚀 Login</button>
+            <div id="loginResponse"></div>
+            <div id="statusBadge"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 2: ESTADO DEL TOKEN -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">🔑</span> 2. Estado del Token</h2>
+            <div id="tokenStatus"></div>
+            <div class="token-display" id="tokenDisplay">
+                No hay token
+            </div>
+            <div class="button-row">
+                <button onclick="verificarToken()">✓ Verificar Token</button>
+                <button onclick="mostrarToken()" class="button-secondary">👁️ Ver Token</button>
+            </div>
+            <div id="tokenResponse"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 3: PERFIL DEL USUARIO -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">👤</span> 3. Perfil</h2>
+            <button onclick="obtenerPerfil()">📋 Obtener Mi Perfil</button>
+            <div id="profileResponse"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 4: DATOS PROTEGIDOS -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">📊</span> 4. Datos Protegidos</h2>
+            <label for="limite">Límite de resultados:</label>
+            <input type="number" id="limite" value="5" min="1" max="100">
+            <div class="button-row">
+                <button onclick="obtenerUsuarios()">👥 Usuarios</button>
+                <button onclick="obtenerProductos()" class="button-secondary">📦 Productos</button>
+            </div>
+            <div id="dataResponse"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 5: ACCIONES -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">⚙️</span> 5. Acciones</h2>
+            <div class="button-row">
+                <button onclick="renovarToken()">🔄 Renovar Token</button>
+                <button onclick="logout()" class="button-secondary">🚪 Logout</button>
+            </div>
+            <div id="actionResponse"></div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- SECCIÓN 6: EJEMPLOS -->
+        <!-- ============================================ -->
+        <div class="section">
+            <h2><span class="emoji">📚</span> 6. Ejemplos de Uso</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Función</th>
+                        <th>Descripción</th>
+                        <th>Requiere Token</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>POST /auth/login</code></td>
+                        <td>Obtener JWT</td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td><code>GET /auth/perfil</code></td>
+                        <td>Perfil del usuario</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>GET /usuarios</code></td>
+                        <td>Listar usuarios</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>GET /productos</code></td>
+                        <td>Listar productos</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /auth/refresh</code></td>
+                        <td>Renovar token</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /auth/logout</code></td>
+                        <td>Logout del sistema</td>
+                        <td>✅</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        // ============================================
+        // UTILIDADES
+        // ============================================
+
+        function guardarToken(token) {
+            localStorage.setItem('authToken', token);
+            actualizarEstado();
+        }
+
+        function obtenerToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        function limpiarToken() {
+            localStorage.removeItem('authToken');
+            actualizarEstado();
+        }
+
+        function actualizarEstado() {
+            const token = obtenerToken();
+            const statusBadge = document.getElementById('statusBadge');
+            const tokenStatus = document.getElementById('tokenStatus');
+
+            if (token) {
+                statusBadge.innerHTML = '<div class="status authenticated">✅ Autenticado</div>';
+                tokenStatus.innerHTML = '<p><strong>Token presente en localStorage</strong></p>';
+            } else {
+                statusBadge.innerHTML = '<div class="status unauthenticated">❌ No autenticado</div>';
+                tokenStatus.innerHTML = '<p><strong>Sin token</strong> - Haz login primero</p>';
+            }
+        }
+
+        function mostrarRespuesta(elementId, data, tipo = 'info') {
+            const elemento = document.getElementById(elementId);
+            if (elemento) {
+                elemento.className = `response ${tipo}`;
+                elemento.textContent = JSON.stringify(data, null, 2);
+            }
+        }
+
+        // ============================================
+        // LOGIN
+        // ============================================
+
+        async function hacerLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                mostrarRespuesta('loginResponse', { error: 'Email y contraseña requeridos' }, 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    guardarToken(data.token);
+                    mostrarRespuesta('loginResponse', {
+                        mensaje: 'Login exitoso',
+                        usuario: data.usuario,
+                        token_generado: true
+                    }, 'success');
+                } else {
+                    mostrarRespuesta('loginResponse', data, 'error');
+                }
+            } catch (error) {
+                mostrarRespuesta('loginResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // PERFIL
+        // ============================================
+
+        async function obtenerPerfil() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('profileResponse', { error: 'No hay token. Haz login primero' }, 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/perfil`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const tipo = response.ok ? 'success' : 'error';
+                mostrarRespuesta('profileResponse', data, tipo);
+            } catch (error) {
+                mostrarRespuesta('profileResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // VERIFICAR TOKEN
+        // ============================================
+
+        async function verificarToken() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('tokenResponse', { error: 'No hay token' }, 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+
+                const data = await response.json();
+                const tipo = data.success ? 'success' : 'error';
+                mostrarRespuesta('tokenResponse', data, tipo);
+            } catch (error) {
+                mostrarRespuesta('tokenResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // MOSTRAR TOKEN
+        // ============================================
+
+        function mostrarToken() {
+            const token = obtenerToken();
+            if (!token) {
+                document.getElementById('tokenDisplay').textContent = 'No hay token';
+                return;
+            }
+            document.getElementById('tokenDisplay').textContent = token;
+        }
+
+        // ============================================
+        // OBTENER USUARIOS
+        // ============================================
+
+        async function obtenerUsuarios() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('dataResponse', { error: 'No hay token. Haz login primero' }, 'error');
+                return;
+            }
+
+            const limite = document.getElementById('limite').value;
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios?page=1&limit=${limite}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const tipo = response.ok ? 'success' : 'error';
+                mostrarRespuesta('dataResponse', data, tipo);
+            } catch (error) {
+                mostrarRespuesta('dataResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // OBTENER PRODUCTOS
+        // ============================================
+
+        async function obtenerProductos() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('dataResponse', { error: 'No hay token. Haz login primero' }, 'error');
+                return;
+            }
+
+            const limite = document.getElementById('limite').value;
+
+            try {
+                const response = await fetch(`${API_URL}/productos?page=1&limit=${limite}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const tipo = response.ok ? 'success' : 'error';
+                mostrarRespuesta('dataResponse', data, tipo);
+            } catch (error) {
+                mostrarRespuesta('dataResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // RENOVAR TOKEN
+        // ============================================
+
+        async function renovarToken() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('actionResponse', { error: 'No hay token' }, 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    guardarToken(data.token);
+                    mostrarRespuesta('actionResponse', { mensaje: 'Token renovado exitosamente' }, 'success');
+                } else {
+                    mostrarRespuesta('actionResponse', data, 'error');
+                }
+            } catch (error) {
+                mostrarRespuesta('actionResponse', { error: error.message }, 'error');
+            }
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+
+        async function logout() {
+            const token = obtenerToken();
+            if (!token) {
+                mostrarRespuesta('actionResponse', { error: 'No hay token' }, 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                limpiarToken();
+                mostrarRespuesta('actionResponse', { mensaje: 'Logout exitoso', token_eliminado: true }, 'success');
+            } catch (error) {
+                mostrarRespuesta('actionResponse', { error: error.message }, 'error');
+                limpiarToken();
+            }
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+
+        actualizarEstado();
+    </script>
+</body>
+</html>

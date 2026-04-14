@@ -2,11 +2,16 @@
  * Rutas de Productos
  * 
  * Implementa endpoints CRUD para productos usando el controlador.
+ * 
+ * **⚠️ RUTAS PROTEGIDAS:**
+ * - GET /productos - Requiere autenticación (JWT)
+ * - GET /productos/:id - Requiere autenticación (JWT)
  */
 
 const express = require('express');
 const ProductosController = require('../controllers/ProductosController');
 const { validateProducto, validateId, validatePagination, errorHandler } = require('../middlewares/validators');
+const { autenticar } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -15,9 +20,16 @@ const router = express.Router();
  * /productos:
  *   get:
  *     summary: Obtener lista de productos
- *     description: Recupera una lista paginada de productos con opciones de filtrado y búsqueda
+ *     description: |
+ *       Recupera una lista paginada de productos con opciones de filtrado y búsqueda.
+ *       
+ *       **⚠️ REQUIERE AUTENTICACIÓN:** Incluir token JWT en Authorization header
+ *       
+ *       Ejemplo: Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     tags:
  *       - Productos
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: nombre
@@ -220,11 +232,11 @@ const router = express.Router();
  *         description: Error en servidor
  */
 
-// GET /productos - Listar productos
-router.get('/', validatePagination, ProductosController.listar);
+// GET /productos - Listar productos (PROTEGIDO - requiere autenticación)
+router.get('/', autenticar, validatePagination, ProductosController.listar);
 
-// GET /productos/:id - Obtener producto
-router.get('/:id', validateId, ProductosController.obtenerPorId);
+// GET /productos/:id - Obtener producto (PROTEGIDO - requiere autenticación)
+router.get('/:id', autenticar, validateId, ProductosController.obtenerPorId);
 
 // POST /productos - Crear producto
 router.post('/', validateProducto, ProductosController.crear);

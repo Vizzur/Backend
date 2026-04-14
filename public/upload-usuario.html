@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Foto de Usuario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: #764ba2;
+        }
+
+        .info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .info strong {
+            color: #333;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .message.loading {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+            display: block;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .result-content {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .result-content strong {
+            color: #333;
+        }
+
+        .photo-preview {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+            margin-top: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Subir Foto de Usuario</h1>
+            <p>Carga tu foto de perfil</p>
+        </div>
+
+        <div class="form-container">
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="userId">ID del Usuario:</label>
+                    <input 
+                        type="number" 
+                        id="userId" 
+                        placeholder="Ej: 1"
+                        min="1"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="photoFile">Seleccionar Foto:</label>
+                    <input 
+                        type="file" 
+                        id="photoFile" 
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        required
+                    >
+                </div>
+
+                <div class="info">
+                    <strong>ℹ️ Tipos permitidos:</strong> JPG, PNG, GIF, WebP<br>
+                    <strong>Tamaño máximo:</strong> 10 MB<br>
+                    <strong>Endpoint:</strong> POST /upload/user/:userId/photo
+                </div>
+
+                <button type="submit">
+                    <span id="buttonText">Subir Foto</span>
+                    <span id="buttonSpinner" style="display: none;">
+                        <div class="loading-spinner"></div>
+                    </span>
+                </button>
+            </form>
+
+            <div id="message" class="message"></div>
+
+            <div id="result" class="result">
+                <h3>✅ Foto subida exitosamente</h3>
+                <div class="result-content">
+                    <div id="resultContent"></div>
+                    <div class="photo-preview">
+                        <img id="previewImage" alt="Foto subida">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const userIdInput = document.getElementById('userId');
+        const photoInput = document.getElementById('photoFile');
+        const messageDiv = document.getElementById('message');
+        const resultDiv = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        const previewImage = document.getElementById('previewImage');
+        const buttonText = document.getElementById('buttonText');
+        const buttonSpinner = document.getElementById('buttonSpinner');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const userId = userIdInput.value.trim();
+            const file = photoInput.files[0];
+
+            if (!userId) {
+                mostrarMensaje('Por favor ingresa un ID de usuario', 'error');
+                return;
+            }
+
+            if (!file) {
+                mostrarMensaje('Por favor selecciona una foto', 'error');
+                return;
+            }
+
+            // Validar tipo de archivo
+            const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!tiposPermitidos.includes(file.type)) {
+                mostrarMensaje('Tipo de archivo no permitido. Solo acepta: JPG, PNG, GIF, WebP', 'error');
+                return;
+            }
+
+            // Validar tamaño
+            const maxSize = 10 * 1024 * 1024; // 10 MB
+            if (file.size > maxSize) {
+                mostrarMensaje('Archivo demasiado grande. Máximo 10 MB', 'error');
+                return;
+            }
+
+            await subirFoto(userId, file);
+        });
+
+        async function subirFoto(userId, file) {
+            mostrarCargando();
+            
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`/upload/user/${userId}/photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mostrarMensaje(
+                        data.error || 'Error al subir la foto',
+                        'error'
+                    );
+                    return;
+                }
+
+                mostrarResultado(data);
+                form.reset();
+
+            } catch (error) {
+                mostrarMensaje('Error de conexión: ' + error.message, 'error');
+            }
+        }
+
+        function mostrarMensaje(mensaje, tipo) {
+            messageDiv.textContent = mensaje;
+            messageDiv.className = `message ${tipo}`;
+            resultDiv.classList.remove('show');
+            buttonText.style.display = 'inline';
+            buttonSpinner.style.display = 'none';
+            form.querySelector('button').disabled = false;
+        }
+
+        function mostrarCargando() {
+            messageDiv.className = 'message loading';
+            messageDiv.textContent = 'Subiendo foto...';
+            resultDiv.classList.remove('show');
+            buttonText.style.display = 'none';
+            buttonSpinner.style.display = 'inline';
+            form.querySelector('button').disabled = true;
+        }
+
+        function mostrarResultado(data) {
+            const user = data.user;
+            const file = data.file;
+
+            resultContent.innerHTML = `
+                <p><strong>Usuario:</strong> ${user.nombre} (ID: ${user.id})</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Nombre del archivo:</strong> ${file.originalName}</p>
+                <p><strong>Tamaño:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                <p><strong>URL accesible:</strong> 
+                    <code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px;">
+                        ${file.path}
+                    </code>
+                </p>
+            `;
+
+            previewImage.src = file.path;
+            resultDiv.classList.add('show');
+            messageDiv.className = 'message success';
+            messageDiv.textContent = '✅ Foto subida y asociada exitosamente';
+            buttonText.style.display = 'inline';
+            buttonSpinner.style.display = 'none';
+            form.querySelector('button').disabled = false;
+        }
+    </script>
+</body>
+</html>

@@ -61,6 +61,29 @@ module.exports = (sequelize) => {
         }
       },
       
+      foto_url: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        validate: {
+          isUrl: {
+            args: true,
+            msg: 'Debe ser una URL válida'
+          },
+          // Validación personalizada: solo valida si hay contenido
+          customValidator(value) {
+            if (!value || value.trim() === '') {
+              // Si está vacío o null, OK
+              return;
+            }
+            // Si tiene contenido, valida que sea URL
+            const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
+            if (!urlRegex.test(value)) {
+              throw new Error('Debe ser una URL válida o estar vacío');
+            }
+          }
+        }
+      },
+      
       fecha_creacion: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

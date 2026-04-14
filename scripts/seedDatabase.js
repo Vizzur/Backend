@@ -15,7 +15,7 @@ async function seedDatabase() {
       {
         nombre: 'Juan Pérez',
         email: 'juan@example.com',
-        password_hash: '$2b$10$hash_ejemplo_juan_123456789', // Hash bcrypt placeholder
+        password_hash: 'password123', // Hash bcrypt placeholder
       },
       {
         nombre: 'María García',

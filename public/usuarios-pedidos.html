@@ -87,9 +87,47 @@
         }
 
         .usuario-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 15px;
             margin-bottom: 15px;
+        }
+
+        .usuario-foto {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            border: 2px solid #667eea;
+            overflow: hidden;
+        }
+
+        .usuario-foto img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .usuario-foto-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 28px;
+        }
+
+        .usuario-header-info {
+            flex: 1;
         }
 
         .usuario-header h2 {
@@ -444,14 +482,23 @@
                 pedidosHtml = '<div class="sin-pedidos">Sin pedidos</div>';
             }
 
+            // Obtener iniciales del nombre para avatar por defecto
+            const iniciales = usuario.nombre.split(' ').map(n => n[0]).join('').toUpperCase();
+            const fotoHtml = usuario.foto_url 
+                ? `<img src="${usuario.foto_url}" alt="${usuario.nombre}" onerror="this.parentElement.innerHTML='<div class=\"usuario-foto-placeholder\">${iniciales}</div>'">` 
+                : `<div class="usuario-foto-placeholder">${iniciales}</div>`;
+            
             return `
                 <div class="usuario-card">
                     <div class="usuario-header">
-                        <h2>#${usuario.id} - ${usuario.nombre}</h2>
-                        <div class="usuario-info">
-                            <div><span class="info-label">Email:</span> ${usuario.email}</div>
-                            <div><span class="info-label">Estado:</span> ${usuario.activo ? '✅ Activo' : '❌ Inactivo'}</div>
-                            <div><span class="info-label">Creado:</span> ${new Date(usuario.fecha_creacion).toLocaleDateString()}</div>
+                        <div class="usuario-foto">${fotoHtml}</div>
+                        <div class="usuario-header-info">
+                            <h2>#${usuario.id} - ${usuario.nombre}</h2>
+                            <div class="usuario-info">
+                                <div><span class="info-label">Email:</span> ${usuario.email}</div>
+                                <div><span class="info-label">Estado:</span> ${usuario.activo ? '✅ Activo' : '❌ Inactivo'}</div>
+                                <div><span class="info-label">Creado:</span> ${new Date(usuario.fecha_creacion).toLocaleDateString()}</div>
+                            </div>
                         </div>
                     </div>
                     

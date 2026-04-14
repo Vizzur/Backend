@@ -2,11 +2,16 @@
  * Rutas de Usuarios
  * 
  * Implementa endpoints CRUD para usuarios usando el controlador.
+ * 
+ * **⚠️ RUTAS PROTEGIDAS:**
+ * - GET /usuarios - Requiere autenticación (JWT)
+ * - GET /usuarios/:id - Requiere autenticación (JWT)
  */
 
 const express = require('express');
 const UsuariosController = require('../controllers/UsuariosController');
 const { validateUsuario, validateId, validatePagination, errorHandler } = require('../middlewares/validators');
+const { autenticar } = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -15,9 +20,16 @@ const router = express.Router();
  * /usuarios:
  *   get:
  *     summary: Obtener lista de usuarios
- *     description: Recupera una lista paginada de usuarios con opciones de filtrado
+ *     description: |
+ *       Recupera una lista paginada de usuarios con opciones de filtrado.
+ *       
+ *       **⚠️ REQUIERE AUTENTICACIÓN:** Incluir token JWT en Authorization header
+ *       
+ *       Ejemplo: Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *     tags:
  *       - Usuarios
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: nombre
@@ -210,11 +222,11 @@ const router = express.Router();
  *         description: Error en servidor
  */
 
-// GET /usuarios - Listar usuarios
-router.get('/', validatePagination, UsuariosController.listar);
+// GET /usuarios - Listar usuarios (PROTEGIDO - requiere autenticación)
+router.get('/', autenticar, validatePagination, UsuariosController.listar);
 
-// GET /usuarios/:id - Obtener usuario
-router.get('/:id', validateId, UsuariosController.obtenerPorId);
+// GET /usuarios/:id - Obtener usuario (PROTEGIDO - requiere autenticación)
+router.get('/:id', autenticar, validateId, UsuariosController.obtenerPorId);
 
 // POST /usuarios - Crear usuario
 router.post('/', validateUsuario, UsuariosController.crear);
